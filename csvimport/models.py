@@ -13,8 +13,7 @@ MODELS = []
 
 
 def get_models():
-    """ Cannot load at module level for later djangos - since its too early
-    """
+    """Cannot load at module level for later djangos - since its too early"""
     global MODELS
     if MODELS:
         return MODELS
@@ -44,7 +43,7 @@ def get_models():
 
 
 class CSVImport(models.Model):
-    """ Logging model for importing files """
+    """Logging model for importing files"""
 
     model_choice = []
     model_name = models.CharField(
@@ -62,6 +61,7 @@ class CSVImport(models.Model):
     )
     upload_file = models.FileField(upload_to="csv", storage=fs)
     file_name = models.CharField(max_length=255, blank=True)
+    delimiter = models.CharField(max_length=1, default=",")
     encoding = models.CharField(max_length=32, blank=True)
     upload_method = models.CharField(
         blank=False, max_length=50, default="manual", choices=CHOICES
@@ -80,9 +80,13 @@ class CSVImport(models.Model):
     def __unicode__(self):
         return self.upload_file.name
 
+    # Pull Request from edouard-gv  (PR:113,ISS:109)
+    def __str__(self):
+        return self.__unicode__()
+
 
 class ImportModel(models.Model):
-    """ Optional one to one mapper of import file to Model """
+    """Optional one to one mapper of import file to Model"""
 
     csvimport = models.ForeignKey(CSVImport, on_delete=models.CASCADE)
     numeric_id = models.PositiveIntegerField()

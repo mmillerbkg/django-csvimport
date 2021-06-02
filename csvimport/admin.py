@@ -1,3 +1,4 @@
+import locale
 from datetime import datetime
 from django import forms
 from django.db import models
@@ -8,7 +9,7 @@ from csvimport.models import CSVImport
 
 
 class CSVImportAdmin(ModelAdmin):
-    """ Custom model to not have much editable! """
+    """Custom model to not have much editable!"""
 
     readonly_fields = ["file_name", "upload_method", "error_log_html", "import_user"]
     fields = [
@@ -17,6 +18,7 @@ class CSVImportAdmin(ModelAdmin):
         "upload_file",
         "file_name",
         "encoding",
+        "delimiter",
         "upload_method",
         "error_log_html",
         "import_user",
@@ -25,9 +27,17 @@ class CSVImportAdmin(ModelAdmin):
         models.CharField: {"widget": forms.Textarea(attrs={"rows": "1", "cols": "40"})},
     }
 
+    # Contributed by edouard-gv (PR:111,ISS:107)
+    def get_changeform_initial_data(self, request):
+        # This works for my problem, but I don't know if there are side effects. So I won't push it
+        # locale.setlocale(locale.LC_ALL, '')
+        return {
+            "delimiter": ";" if locale.localeconv()["decimal_point"] == "," else ","
+        }
+
     def save_model(self, request, obj, form, change):
-        """ Do save and process command - cant commit False
-            since then file wont be found for reopening via right charset
+        """Do save and process command - cant commit False
+        since then file wont be found for reopening via right charset
         """
         form.save()
         from csvimport.management.commands.importcsv import Command
@@ -42,6 +52,7 @@ class CSVImportAdmin(ModelAdmin):
                 charset=obj.encoding,
                 uploaded=obj.upload_file,
                 defaults=defaults,
+                delimiter=obj.delimiter,
             )
         errors = cmd.run(logid=obj.id)
         if errors:
@@ -51,7 +62,7 @@ class CSVImportAdmin(ModelAdmin):
         obj.save()
 
     def filename_defaults(self, filename):
-        """ Override this method to supply filename based data """
+        """Override this method to supply filename based data"""
         defaults = []
         splitters = {"/": -1, ".": 0, "_": 0}
         for splitter, index in splitters.items():
@@ -61,6 +72,6 @@ class CSVImportAdmin(ModelAdmin):
 
 
 admin.site.register(CSVImport, CSVImportAdmin)
-from csvimport.tests.models import Item
 
-admin.site.register(Item)
+# Removed Test Model from Admin
+# Pull Request from edouard-gv (PR:112,ISS:108)

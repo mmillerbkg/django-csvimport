@@ -74,7 +74,7 @@ importing_csv = dispatch.Signal(providing_args=["instance", "row"])
 
 
 def save_csvimport(props=None, instance=None):
-    """ To avoid circular imports do saves here """
+    """To avoid circular imports do saves here"""
     try:
         if not instance:
             from csvimport.models import CSVImport
@@ -161,7 +161,7 @@ class Command(LabelCommand, CSVParser):
     help = "Imports a CSV file to a model"
 
     def __init__(self):
-        """ Set default attributes data types """
+        """Set default attributes data types"""
         super(Command, self).__init__()
         self.props = {}
         self.debug = False
@@ -190,8 +190,8 @@ class Command(LabelCommand, CSVParser):
         self.handle_label(label, **options)
 
     def handle_label(self, label, **options):
-        """ Handle the circular reference by passing the nested
-            save_csvimport function
+        """Handle the circular reference by passing the nested
+        save_csvimport function
         """
         self.loglist = []
         filename = label
@@ -245,7 +245,7 @@ class Command(LabelCommand, CSVParser):
         clean=True,
         bulk=False,
     ):
-        """ Setup up the attributes for running the import """
+        """Setup up the attributes for running the import"""
         self.clean = clean
         self.bulk = bulk
         self.defaults = self.set_mappings(defaults)
@@ -338,7 +338,7 @@ class Command(LabelCommand, CSVParser):
         return model_instance
 
     def run(self, logid=0):
-        """ Run the csvimport """
+        """Run the csvimport"""
         loglist = []
         if self.nameindexes:
             indexes = self.csvfile.pop(0)
@@ -408,7 +408,7 @@ class Command(LabelCommand, CSVParser):
             return ["No logging"]
 
     def row_insert(self, row, model_instance, loglist):
-        """ Insert a row - separate function for transaction wrapping """
+        """Insert a row - separate function for transaction wrapping"""
         msg = ""
         if model_instance:
             if self.defaults:
@@ -462,7 +462,7 @@ class Command(LabelCommand, CSVParser):
                     logger.info(line)
 
     def type_clean(self, field, value, loglist, row=0):
-        """ Data value clean up - type formatting"""
+        """Data value clean up - type formatting"""
         if not self.fieldmap.get(field):
             raise Exception(
                 "Fieldmap is not populated for %s -\n%s" % (field, self.fieldmap)
@@ -541,7 +541,7 @@ class Command(LabelCommand, CSVParser):
         return value
 
     def parse_header(self, headlist):
-        """ Parse the list of headings and match with self.fieldmap """
+        """Parse the list of headings and match with self.fieldmap"""
         mapping = []
         found = []
         headlist = [cleancol.sub("_", col) for col in headlist]
@@ -569,13 +569,14 @@ class Command(LabelCommand, CSVParser):
         return ""
 
     def insert_fkey(self, foreignkey, rowcol):
-        """ Add fkey if not present
-            If there is corresponding data in the model already,
-            we do not need to add more, since we are dealing with
-            foreign keys, therefore foreign data
+        """Add fkey if not present
+        If there is corresponding data in the model already,
+        we do not need to add more, since we are dealing with
+        foreign keys, therefore foreign data
         """
         fk_key, fk_field = foreignkey
-        if fk_key and fk_field:
+        # Pull Request from eduoard_gv (PR:114,ISS:110)
+        if fk_key and fk_field and rowcol != "":
             # Allow users to specify app label for fk model if they want
             if fk_key.find(".") > -1:
                 new_app_label, fk_key = fk_key.split(".")
@@ -596,7 +597,7 @@ class Command(LabelCommand, CSVParser):
         return rowcol
 
     def check_fkey(self, key, field):
-        """ Build fkey mapping via introspection of models """
+        """Build fkey mapping via introspection of models"""
         # TODO fix to find related field name rather than assume second field
         if not key.endswith("_id"):
             if field.__class__ == models.ForeignKey:
